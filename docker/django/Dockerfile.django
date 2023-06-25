@@ -1,0 +1,23 @@
+FROM python:3.11.3-buster
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN mkdir -p /usr/src/app
+RUN mkdir -p /usr/src/app/logs
+RUN mkdir -p /usr/src/app/staticfiles
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    binutils \
+    gdal-bin \
+    libproj-dev \
+    libwebp-dev
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN pip install --upgrade pip
+
+RUN pip install --no-cache-dir -r requirements.txt

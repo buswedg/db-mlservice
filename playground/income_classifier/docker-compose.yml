@@ -1,0 +1,18 @@
+---
+version: '3.8'
+services:
+  miniconda3:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        - PASSW=${PASSW}
+    container_name: income-classifier-miniconda3
+    env_file:
+      - environment.env
+    volumes:
+      - ${WORKING_PATH}:/usr/src/miniconda3/working
+    network_mode: 'bridge'
+    ports:
+      - '8889:8889/tcp'
+      - '2299:2299'

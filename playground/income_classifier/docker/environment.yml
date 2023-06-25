@@ -1,0 +1,13 @@
+name: base
+channels:
+  - 'https://repo.continuum.io/pkgs/free'
+  - conda-forge
+  - defaults
+dependencies:
+  - pandas==2.0.2
+  - numpy==1.24.3
+  - sqlalchemy==2.0.15
+  - scikit-learn==1.2.2
+  - pyodbc==4.0.39
+  - joblib==1.2.0
+  - jupyterlab

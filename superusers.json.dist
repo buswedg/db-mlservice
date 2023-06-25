@@ -1,0 +1,7 @@
+[
+    {
+        "username": "admin",
+        "password": "pass1234",
+        "email": "admin@db-openservice.com"
+    }
+]
