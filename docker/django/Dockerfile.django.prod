@@ -1,0 +1,47 @@
+############################################
+FROM python:3.12.3-bookworm as builder
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /usr/src/build
+
+COPY ./requirements.txt .
+
+RUN apt-get update --yes --quiet
+
+RUN pip install --upgrade pip
+
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/build/wheels -r requirements.txt
+
+
+############################################
+FROM python:3.12.3-bookworm
+
+RUN mkdir -p /usr/src/app
+RUN mkdir -p /usr/src/app/logs
+RUN mkdir -p /usr/src/app/staticfiles
+
+RUN apt-get update && apt-get install -y -q --no-install-recommends \
+    # essential build tools
+    build-essential \
+    # tools for binary manipulation
+    binutils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN pip install --upgrade pip
+
+COPY --from=builder /usr/src/build/wheels /wheels
+COPY --from=builder /usr/src/build/requirements.txt .
+RUN pip install --no-cache /wheels/*
+
+RUN groupadd -g 1000 app && useradd -u 1000 -g app -s /bin/sh app
+
+RUN chown -R app:app .
+
+USER app
