@@ -16,7 +16,7 @@ Pillow==10.3.0
 psycopg2==2.9.9
 Pygments==2.18.0
 redis==5.0.4
-requests==2.31.0
+requests==2.32.2
 scikit-learn==1.4.2
 sentry-sdk==2.0.1
 tqdm==4.66.4
