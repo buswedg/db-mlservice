@@ -5,7 +5,7 @@ celery==5.4.0
 Django==4.2.11
 django-celery-beat==2.6.0
 django-solo==2.2.0
-djangorestframework==3.15.1
+djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
 gunicorn==22.0.0
 joblib==1.4.2
