@@ -12,7 +12,7 @@ joblib==1.4.2
 numpy==1.26.4
 openpyxl==3.1.2
 pandas==2.2.2
-Pillow==10.3.0
+Pillow==10.4.0
 psycopg2==2.9.9
 Pygments==2.18.0
 redis==5.0.4
