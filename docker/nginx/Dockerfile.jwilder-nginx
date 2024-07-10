@@ -1,4 +1,4 @@
-FROM jwilder/nginx-proxy:1.5.1-alpine
+FROM jwilder/nginx-proxy:1.6.0-alpine
 
 COPY conf.d/custom.conf /etc/nginx/conf.d/custom.conf
 COPY conf.d/compression.conf /etc/nginx/conf.d/compression.conf

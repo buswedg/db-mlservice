@@ -1,4 +1,4 @@
-FROM jwilder/nginx-proxy:1.5.1-alpine
+FROM jwilder/nginx-proxy:1.6.0-alpine
 
 COPY certs/server.crt /etc/nginx/certs/
 COPY certs/server.key /etc/nginx/certs/
