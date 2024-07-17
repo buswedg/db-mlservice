@@ -1,0 +1,106 @@
+services:
+    django:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django.prod
+        container_name: ${DJANGO_CONTAINER_NAME?}
+        restart: unless-stopped
+        env_file: prod.env
+        command: sh -c "
+            ./wait-for-it.sh db:5432 -t 0 &&
+            python manage.py migrate --noinput &&
+            ./rebuild.sh &&
+            python manage.py collectstatic --noinput &&
+            gunicorn config.wsgi:application --bind 0.0.0.0:8000
+            "
+        volumes:
+            - .:/usr/src/app
+            - static_volume:/usr/src/app/staticfiles
+            - media_volume:/usr/src/app/media
+            - logs_volume:/usr/src/app/logs
+        networks:
+            web:
+                aliases:
+                    - web
+        ports:
+            - "8000:8000"
+        depends_on:
+            - db
+            - redis
+
+    db:
+        image: postgis/postgis:16-3.4
+        container_name: ${DB_CONTAINER_NAME?}
+        restart: unless-stopped
+        hostname: db
+        environment:
+            - POSTGRES_DB=${DB_NAME?}
+            - POSTGRES_USER=${DB_USERNAME?}
+            - POSTGRES_PASSWORD=${DB_PASSWORD?}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - web
+        ports:
+            - "5432:5432"
+
+    redis:
+        image: redis:7.0.15-alpine
+        container_name: ${REDIS_CONTAINER_NAME?}
+        restart: unless-stopped
+        volumes:
+            - redis_data:/data
+        networks:
+            - web
+        expose:
+            - "6379"
+
+    celery:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django.prod
+        container_name: ${CELERY_CONTAINER_NAME?}
+        env_file: prod.env
+        command: sh -c "
+            ./wait-for-it.sh django:8000 -t 0 &&
+            celery -A apps.core worker -Q queue_short,queue_long -l debug --logfile=/usr/src/app/logs/celery.log
+            "
+        volumes:
+            - .:/usr/src/app
+            - logs_volume:/usr/src/app/logs
+        networks:
+            - web
+        depends_on:
+            - django
+            - db
+            - redis
+
+    celery-beat:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django.prod
+        container_name: ${CELERY_BEAT_CONTAINER_NAME?}
+        env_file: prod.env
+        command: sh -c "
+            ./wait-for-it.sh django:8000 -t 0 &&
+            celery -A apps.core beat -l debug --pidfile=/tmp/celerybeat.pid
+            "
+        volumes:
+            - .:/usr/src/app
+            - logs_volume:/usr/src/app/logs
+        networks:
+            - web
+        depends_on:
+            - django
+            - db
+            - redis
+
+networks:
+    web:
+
+volumes:
+    static_volume:
+    media_volume:
+    logs_volume:
+    postgres_data:
+    redis_data:

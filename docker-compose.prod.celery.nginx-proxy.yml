@@ -1,0 +1,157 @@
+services:
+    django:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django.prod
+        container_name: ${DJANGO_CONTAINER_NAME?}
+        restart: unless-stopped
+        env_file: prod.env
+        environment:
+            - DJANGO_SECURE_SSL_REDIRECT=True
+            - DJANGO_SECURE_PROXY_SSL_HEADER_CHECK=True
+            - VIRTUAL_HOST=${DJANGO_ALLOWED_HOSTS?}
+            - VIRTUAL_PORT=8000
+            - LETSENCRYPT_HOST=${DJANGO_ALLOWED_HOSTS?}
+        command: sh -c "
+            ./wait-for-it.sh db:5432 -t 0 &&
+            python manage.py migrate --noinput &&
+            ./rebuild.sh &&
+            python manage.py collectstatic --noinput &&
+            gunicorn config.wsgi:application --bind 0.0.0.0:8000
+            "
+        volumes:
+            - .:/usr/src/app
+            - static_volume:/usr/src/app/staticfiles
+            - media_volume:/usr/src/app/media
+            - logs_volume:/usr/src/app/logs
+        networks:
+            web:
+                aliases:
+                    - web
+        expose:
+            - "8000"
+        depends_on:
+            - db
+            - redis
+
+    db:
+        image: postgis/postgis:16-3.4
+        container_name: ${DB_CONTAINER_NAME?}
+        restart: unless-stopped
+        hostname: db
+        environment:
+            - POSTGRES_DB=${DB_NAME?}
+            - POSTGRES_USER=${DB_USERNAME?}
+            - POSTGRES_PASSWORD=${DB_PASSWORD?}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - web
+        ports:
+            - "5432:5432"
+
+    nginx-proxy:
+        build:
+            context: docker/nginx
+            dockerfile: Dockerfile.nginx-proxy
+        container_name: ${NGINX_PROXY_CONTAINER_NAME?}
+        restart: unless-stopped
+        volumes:
+            - static_volume:/usr/src/app/staticfiles
+            - media_volume:/usr/src/app/media
+            - conf:/etc/nginx/conf.d
+            - vhost:/etc/nginx/vhost.d
+            - certs:/etc/nginx/certs:ro
+            - html:/usr/share/nginx/html
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        networks:
+            - web
+        ports:
+            - "443:443"
+            - "80:80"
+        depends_on:
+            - django
+
+    nginx-proxy-acme-companion:
+        image: nginxproxy/acme-companion:2.4.0
+        container_name: ${NGINX_PROXY_ACME_COMPANION_CONTAINER_NAME?}
+        restart: unless-stopped
+        env_file: prod.env
+        environment:
+            - NGINX_PROXY_CONTAINER=${NGINX_PROXY_CONTAINER_NAME?}
+            - DEFAULT_EMAIL=${ADMIN_EMAIL?}
+        volumes:
+            - conf:/etc/nginx/conf.d
+            - vhost:/etc/nginx/vhost.d
+            - certs:/etc/nginx/certs:rw
+            - html:/usr/share/nginx/html
+            - acme:/etc/acme.sh
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        depends_on:
+            - nginx-proxy
+
+    redis:
+        image: redis:7.0.15-alpine
+        container_name: ${REDIS_CONTAINER_NAME?}
+        restart: unless-stopped
+        volumes:
+            - redis_data:/data
+        networks:
+            - web
+        expose:
+            - "6379"
+
+    celery:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django.prod
+        container_name: ${CELERY_CONTAINER_NAME?}
+        env_file: prod.env
+        command: sh -c "
+            ./wait-for-it.sh django:8000 -t 0 &&
+            celery -A apps.core worker -Q queue_short,queue_long -l debug --logfile=/usr/src/app/logs/celery.log
+            "
+        volumes:
+            - .:/usr/src/app
+            - logs_volume:/usr/src/app/logs
+        networks:
+            - web
+        depends_on:
+            - django
+            - db
+            - redis
+
+    celery-beat:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django.prod
+        container_name: ${CELERY_BEAT_CONTAINER_NAME?}
+        env_file: prod.env
+        command: sh -c "
+            ./wait-for-it.sh django:8000 -t 0 &&
+            celery -A apps.core beat -l debug --pidfile=/tmp/celerybeat.pid
+            "
+        volumes:
+            - .:/usr/src/app
+            - logs_volume:/usr/src/app/logs
+        networks:
+            - web
+        depends_on:
+            - django
+            - db
+            - redis
+
+networks:
+    web:
+
+volumes:
+    static_volume:
+    media_volume:
+    logs_volume:
+    postgres_data:
+    conf:
+    vhost:
+    certs:
+    html:
+    acme:
+    redis_data:

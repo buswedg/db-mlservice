@@ -1,0 +1,5 @@
+location /static/ {
+  alias /usr/src/app/staticfiles/;
+  add_header Cache-Control "max-age=2592000, public, must-revalidate";
+  expires 1d;
+}

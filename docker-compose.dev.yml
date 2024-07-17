@@ -1,0 +1,52 @@
+services:
+    django:
+        build:
+            context: .
+            dockerfile: docker/django/Dockerfile.django
+        container_name: ${DJANGO_CONTAINER_NAME?}
+        env_file: dev.env
+        command: sh -c "
+            ./wait-for-it.sh db:5432 -t 0 &&
+            python manage.py makemigrations --noinput &&
+            python manage.py migrate --noinput &&
+            python manage.py collectstatic --noinput &&
+            ./rebuild.sh &&
+            gunicorn config.wsgi:application --bind 0.0.0.0:8000 --reload --timeout 120 --log-level DEBUG
+            "
+        volumes:
+            - .:/usr/src/app
+            - static_volume:/usr/src/app/staticfiles
+            - media_volume:/usr/src/app/media
+            - logs_volume:/usr/src/app/logs
+        networks:
+            web:
+                aliases:
+                    - web
+        ports:
+            - "8000:8000"
+        depends_on:
+            - db
+
+    db:
+        image: postgis/postgis:15-3.3
+        container_name: ${DB_CONTAINER_NAME?}
+        hostname: db
+        environment:
+            - POSTGRES_DB=${DB_NAME?}
+            - POSTGRES_USER=${DB_USERNAME?}
+            - POSTGRES_PASSWORD=${DB_PASSWORD?}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - web
+        ports:
+            - "5432:5432"
+
+networks:
+    web:
+
+volumes:
+    static_volume:
+    media_volume:
+    logs_volume:
+    postgres_data:

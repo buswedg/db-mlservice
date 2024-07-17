@@ -1,0 +1,5 @@
+FROM nginxproxy/nginx-proxy:1.6.0-alpine
+
+COPY conf.d/custom.conf /etc/nginx/conf.d/custom.conf
+COPY conf.d/compression.conf /etc/nginx/conf.d/compression.conf
+COPY vhost.d/default /etc/nginx/vhost.d/default
