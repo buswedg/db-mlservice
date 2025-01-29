@@ -73,7 +73,7 @@ services:
             - django
 
     nginx-proxy-acme-companion:
-        image: nginxproxy/acme-companion:2.4.0
+        image: nginxproxy/acme-companion:2.5.2
         container_name: ${NGINX_PROXY_ACME_COMPANION_CONTAINER_NAME?}
         restart: unless-stopped
         env_file: prod.env
