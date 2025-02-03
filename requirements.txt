@@ -4,9 +4,9 @@ boto3==1.36.11
 celery==5.4.0
 Django==4.2.18
 django-celery-beat==2.7.0
-django-solo==2.3.0
+django-solo==2.4.0
 djangorestframework==3.15.2
-djangorestframework-simplejwt==5.3.1
+djangorestframework-simplejwt==5.4.0
 gunicorn==23.0.0
 joblib==1.4.2
 numpy==2.2.2
@@ -15,10 +15,10 @@ pandas==2.2.3
 Pillow==10.4.0
 psycopg2==2.9.10
 Pygments==2.19.1
-redis==5.0.8
+redis==5.2.1
 requests==2.32.3
 scikit-learn==1.6.1
-sentry-sdk==2.13.0
+sentry-sdk==2.20.0
 tqdm==4.67.1
 ua-parser==0.18.0
 git+https://github.com/djangomango/django-auto-admin.git@main
