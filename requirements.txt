@@ -20,5 +20,5 @@ requests==2.32.3
 scikit-learn==1.6.1
 sentry-sdk==2.13.0
 tqdm==4.66.5
-ua-parser==0.18.0
+ua-parser==1.0.1
 git+https://github.com/djangomango/django-auto-admin.git@main
