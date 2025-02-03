@@ -62,7 +62,7 @@ services:
             - django
 
     redis:
-        image: redis:7.4.0-alpine
+        image: redis:7.4.2-alpine
         container_name: ${REDIS_CONTAINER_NAME?}
         restart: unless-stopped
         volumes:
