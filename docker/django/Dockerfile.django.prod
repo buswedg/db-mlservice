@@ -1,5 +1,5 @@
 ############################################
-FROM python:3.13.1-bookworm as builder
+FROM python:3.13.2-bookworm as builder
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -16,7 +16,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/build/wheels -r requ
 
 
 ############################################
-FROM python:3.13.1-bookworm
+FROM python:3.13.2-bookworm
 
 RUN mkdir -p /usr/src/app
 RUN mkdir -p /usr/src/app/logs
