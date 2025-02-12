@@ -1,6 +1,6 @@
 azure-common==1.1.28
 azure-storage-blob==12.24.1
-boto3==1.36.17
+boto3==1.36.18
 celery==5.4.0
 Django==4.2.19
 django-celery-beat==2.7.0
